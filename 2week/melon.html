@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 02</title>
+<!-- <style>
+  /* 전체 페이지 기본 설정 */
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Dotum', sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 20px 40px;
+  }
+
+  /* 메인 제목 스타일 */
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 5px;
+  }
+
+  /* 서브 타이틀 (인기 순위) 스타일 */
+  .rankings {
+    font-size: 15px;
+    color: #00cd3c; /* 멜론을 연상시키는 그린 포인트 컬러 */
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  /* 가수 선택 탭 영역 */
+  .artist-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 25px;
+  }
+
+  .artist-tabs button {
+    border: 1px solid #ddd;
+    background-color: #ffffff;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .artist-tabs button:hover {
+    border-color: #00cd3c;
+  }
+
+  /* 현재 선택된 가수 탭 강조 */
+  .artist-tabs button.active {
+    background-color: #00cd3c;
+    border-color: #00cd3c;
+    color: #ffffff;
+  }
+
+  /* 카드 컨테이너 스타일 */
+  .container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* 마우스 호버 시 인터랙션 효과 */
+  .container:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  /* 링크 태그 기본 스타일 초기화 (블록 요소화) */
+  .container a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  /* 이미지 스타일 */
+  .container img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* 노래 제목 / 가수 표시 영역 */
+  .song-info {
+    padding: 18px 20px;
+  }
+
+  .song-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+    letter-spacing: -0.5px;
+  }
+
+  .song-artist {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #888;
+  }
+</style> -->
+</head>
+<body>
+  <h1>멜론 차트</h1>
+  <div class="rankings">인기 순위</div>
+
+  <!-- 가수 선택 탭: JS가 songs 배열을 읽어서 자동으로 버튼을 만들어줌 -->
+  <div class="artist-tabs" id="artistTabs"></div>
+
+  <!-- 노래 카드가 그려질 영역 -->
+  <div id="songList"></div>
+
+  <script>
+    // 노래 데이터: artist(가수)별로 묶여있지 않고 하나의 배열로 관리하고,
+    // 화면에 그릴 때 artist 값을 기준으로 필터링한다.
+    // (원래 있던 3곡은 전부 Frank Sinatra 곡이라 예시로 다른 가수 곡도 몇 개 추가해뒀음 -> 필요없으면 지우고 써도 됨)
+    const songs = [
+      {
+        artist: "Frank Sinatra",
+        title: "My Way",
+        query: "노래방 My way",
+        img: "https://picsum.photos/600/150?random=1"
+      },
+      {
+        artist: "Frank Sinatra",
+        title: "Fly Me To The Moon",
+        query: "노래방 Fly me to the moon",
+        img: "https://picsum.photos/600/150?random=2"
+      },
+      {
+        artist: "Frank Sinatra",
+        title: "That's Life",
+        query: "노래방 That's life",
+        img: "https://picsum.photos/600/150?random=3"
+      },
+      {
+        artist: "IU",
+        title: "Good Day",
+        query: "노래방 좋은날 아이유",
+        img: "https://picsum.photos/600/150?random=4"
+      },
+      {
+        artist: "IU",
+        title: "Through the Night",
+        query: "노래방 밤편지 아이유",
+        img: "https://picsum.photos/600/150?random=5"
+      }
+    ];
+
+    const tabsEl = document.getElementById("artistTabs");
+    const listEl = document.getElementById("songList");
+
+    // songs 배열에서 중복 없이 가수 이름만 뽑아냄
+    const artists = ["전체", ...new Set(songs.map(s => s.artist))];
+
+    // 현재 화면에 필터링해서 보여주는 함수
+    function renderSongs(selectedArtist) {
+      listEl.innerHTML = "";
+
+      const filtered = selectedArtist === "전체"
+        ? songs
+        : songs.filter(s => s.artist === selectedArtist);
+
+      filtered.forEach(song => {
+        const card = document.createElement("div");
+        card.className = "container";
+        card.innerHTML = `
+          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(song.query)}" target="_blank">
+            <img src="${song.img}" alt="${song.title} 이미지">
+            <div class="song-info">
+              <div class="song-title">${song.title}</div>
+              <div class="song-artist">${song.artist}</div>
+            </div>
+          </a>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    // 가수 탭 버튼을 만들고 클릭 이벤트를 붙임
+    function renderTabs(selectedArtist) {
+      tabsEl.innerHTML = "";
+      artists.forEach(artist => {
+        const btn = document.createElement("button");
+        btn.textContent = artist;
+        if (artist === selectedArtist) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          renderTabs(artist);
+          renderSongs(artist);
+        });
+        tabsEl.appendChild(btn);
+      });
+    }
+
+    // 초기 화면: 전체 보기
+    renderTabs("전체");
+    renderSongs("전체");
+  </script>
+</body>
+</html>
